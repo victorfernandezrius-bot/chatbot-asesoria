@@ -227,7 +227,7 @@ def main():
     stripe_app.router.add_post("/stripe-webhook", stripe_webhook)
 
     import asyncio
-    async def run_all():
+async def run_all():
     runner = web.AppRunner(stripe_app)
     await runner.setup()
     port = int(os.environ.get("PORT", 8080))
