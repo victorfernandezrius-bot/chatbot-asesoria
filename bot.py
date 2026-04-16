@@ -95,29 +95,40 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # PASO 1: elegir asesoría
     if texto in links:
         estado["asesoria"] = texto
-        await update.message.reply_text("¿Cómo quieres pagar?", reply_markup=markup_pago)
+        asesoria = texto
+        # Mostrar solo las opciones de pago disponibles para esa asesoría
+        opciones_disponibles = list(links[asesoria].keys())
+        menu_dinamico = [opciones_disponibles]
+        markup_dinamico = ReplyKeyboardMarkup(menu_dinamico, one_time_keyboard=True)
+        await update.message.reply_text("¿Cómo quieres pagar?", reply_markup=markup_dinamico)
 
     # PASO 2: elegir tipo de pago
     elif texto in ["Mensual", "Anual"] and "asesoria" in estado:
+        asesoria = estado["asesoria"]
+        if texto not in links[asesoria]:
+            await update.message.reply_text(
+                "Esa opción no está disponible. Elige otra del menú."
+            )
+            return
         estado["pago"] = texto
-        link = links[estado["asesoria"]][texto]
+        link = links[asesoria][texto]
         await update.message.reply_text(
             f"Perfecto 👌\n\nRealiza el pago aquí:\n{link}\n\n"
             "Cuando termines, escribe /pagado para continuar."
         )
 
-    # PASO 3: usuario dice que pagó (fallback manual, mientras no tienes webhook)
+    # PASO 3: usuario dice que pagó
     elif texto == "/pagado" or texto.lower() in ["pagado", "ya pagué", "ya pague"]:
         await update.message.reply_text(
             "Verificando tu pago... ✅\n\n"
-            "Por favor escribe tu **nombre completo**:"
+            "Por favor escribe tu nombre completo:"
         )
         estado["esperando"] = "nombre"
 
     # PASO 4: recoger nombre
     elif estado.get("esperando") == "nombre":
         estado["nombre"] = texto
-        await update.message.reply_text("Ahora escribe tu **correo electrónico**:")
+        await update.message.reply_text("Ahora escribe tu correo electrónico:")
         estado["esperando"] = "email"
 
     # PASO 5: recoger email y completar flujo
