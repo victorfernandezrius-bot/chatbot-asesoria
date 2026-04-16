@@ -102,20 +102,20 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
         markup_dinamico = ReplyKeyboardMarkup(menu_dinamico, one_time_keyboard=True)
         await update.message.reply_text("¿Cómo quieres pagar?", reply_markup=markup_dinamico)
 
-    # PASO 2: elegir tipo de pago
-    elif texto in ["Mensual", "Anual"] and "asesoria" in estado:
-        asesoria = estado["asesoria"]
-        if texto not in links[asesoria]:
-            await update.message.reply_text(
-                "Esa opción no está disponible. Elige otra del menú."
-            )
-            return
-        estado["pago"] = texto
-        link = links[asesoria][texto]
-        await update.message.reply_text(
-            f"Perfecto 👌\n\nRealiza el pago aquí:\n{link}\n\n"
-            "Cuando termines, escribe /pagado para continuar."
-        )
+# PASO 2: elegir tipo de pago
+elif texto in ["Mensual", "Anual"] and "asesoria" in estado:
+    asesoria = estado["asesoria"]
+    if texto not in links[asesoria]:
+        await update.message.reply_text("Esa opción no está disponible. Elige otra del menú.")
+        return
+    estado["pago"] = texto
+    link_base = links[asesoria][texto]
+    # Añadir el chat_id como referencia para Stripe
+    link = f"{link_base}?client_reference_id={user_id}"
+    await update.message.reply_text(
+        f"Perfecto 👌\n\nRealiza el pago aquí:\n{link}\n\n"
+        "Cuando termines el pago volverás automáticamente al bot."
+    )
 
     # PASO 3: usuario dice que pagó
     elif texto == "/pagado" or texto.lower() in ["pagado", "ya pagué", "ya pague"]:
@@ -182,7 +182,6 @@ async def stripe_webhook(request: web.Request):
     payload    = await request.read()
     sig_header = request.headers.get("Stripe-Signature", "")
 
-    # Verificar firma de Stripe
     try:
         timestamp = sig_header.split("t=")[1].split(",")[0]
         sig       = sig_header.split("v1=")[1].split(",")[0]
@@ -199,6 +198,36 @@ async def stripe_webhook(request: web.Request):
 
     event = await request.json()
 
+    if event.get("type") == "checkout.session.completed":
+        session  = event["data"]["object"]
+        email    = session.get("customer_details", {}).get("email", "")
+        nombre   = session.get("customer_details", {}).get("name", "Cliente")
+        chat_id  = session.get("client_reference_id")  # <-- clave
+
+        if chat_id:
+            chat_id = int(chat_id)
+            if chat_id not in usuarios:
+                usuarios[chat_id] = {}
+            usuarios[chat_id]["nombre"] = nombre
+            usuarios[chat_id]["email"]  = email
+
+            asesoria = usuarios[chat_id].get("asesoria", "")
+            pago     = usuarios[chat_id].get("pago", "")
+
+            app_bot = request.app["bot_app"]
+            await app_bot.bot.send_message(
+                chat_id=chat_id,
+                text=(
+                    f"✅ ¡Pago confirmado, {nombre}!\n\n"
+                    f"👉 Reserva tu sesión aquí:\n{CALENDLY_LINK}\n\n"
+                    "También te enviamos un correo con todos los detalles."
+                )
+            )
+
+            enviar_correo(email, f"Confirmación {asesoria}", correo_cliente(nombre, email, asesoria, pago))
+            enviar_correo(TU_CORREO, f"Nuevo cliente: {nombre}", correo_negocio(nombre, email, asesoria, pago))
+
+    return web.Response(status=200, text="OK")
     # Solo procesamos pagos completados
     if event.get("type") == "checkout.session.completed":
         session  = event["data"]["object"]
