@@ -228,17 +228,18 @@ def main():
 
     import asyncio
     async def run_all():
-        runner = web.AppRunner(stripe_app)
-        await runner.setup()
-        port = int(os.environ.get("PORT", 8080))
-        site = web.TCPSite(runner, "0.0.0.0", port)
-        await site.start()
-        print(f"Webhook Stripe escuchando en :{port}/stripe-webhook")
-        await application.initialize()
-        await application.start()
-        await application.updater.start_polling()
-        print("Bot Telegram funcionando")
-        await asyncio.Event().wait()
+    runner = web.AppRunner(stripe_app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    print(f"Webhook Stripe escuchando en :{port}/stripe-webhook")
+    await application.initialize()
+    await application.start()
+    # Limpiar sesiones anteriores antes de empezar
+    await application.updater.start_polling(drop_pending_updates=True)
+    print("Bot Telegram funcionando")
+    await asyncio.Event().wait()
 
     asyncio.run(run_all())
 
