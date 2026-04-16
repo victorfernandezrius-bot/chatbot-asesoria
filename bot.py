@@ -19,7 +19,7 @@ SMTP_USER             = os.environ.get("SMTP_USER")
 SMTP_PASS             = os.environ.get("SMTP_PASS")
 TU_CORREO             = os.environ.get("TU_CORREO")
 CALENDLY_LINK         = os.environ.get("CALENDLY_LINK")
-WEB_LINK_1            = os.environ.get("WEB_LINK_1", "")
+WEB_LINK_1            = os.environ.get("WEB_LINK", "")
 
 # ─── MENÚS ───────────────────────────────────────────────────
 menu_asesoria = [["Básica", "Avanzada"], ["Avanzada +", "Premium"]]
