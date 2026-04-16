@@ -1,11 +1,11 @@
 import os
-TOKEN                 = os.environ.get("8442937473:AAGyQIdX2H8tAx3a4psW16PmDqFK9L0kdDU")
-STRIPE_WEBHOOK_SECRET = os.environ.get("whsec_llllAQoZvXFqc5Zg3IIapTfEZNcMG9Jm")
-SMTP_USER             = os.environ.get("victor@contabilidadpersonal.com")
-SMTP_PASS             = os.environ.get("090594Victor!")
-TU_CORREO             = os.environ.get("victor@contabilidadpersonal.com")
-CALENDLY_LINK         = os.environ.get("https://calendly.com/victor-contabilidadpersonal/asesoria")
-WEB_LINK_1            = os.environ.get("https://www.contabilidadpersonal.com/test-idoneidad")
+TOKEN                 = os.environ.get("TOKEN")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
+SMTP_USER             = os.environ.get("SMTP_USER")
+SMTP_PASS             = os.environ.get("SMTP_PASS")
+TU_CORREO             = os.environ.get("TU_CORREO ")
+CALENDLY_LINK         = os.environ.get("CALENDLY_LINK ")
+WEB_LINK_1            = os.environ.get("WEB_LINK")
 import hmac
 import hashlib
 import smtplib
