@@ -12,8 +12,8 @@ from telegram.ext import (ApplicationBuilder, CommandHandler,
 # ─── CONFIGURACIÓN ───────────────────────────────────────────
 TOKEN                 = os.environ.get("TOKEN")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
-SMTP_HOST             = "smtp.gmail.com"
-SMTP_PORT             = 587
+SMTP_HOST             = "smpt.serviciodecorreo.es"
+SMTP_PORT             = 465
 SMTP_USER             = os.environ.get("SMTP_USER")
 SMTP_PASS             = os.environ.get("SMTP_PASS")
 TU_CORREO             = os.environ.get("TU_CORREO")
