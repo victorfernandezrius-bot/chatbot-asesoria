@@ -211,13 +211,22 @@ async def stripe_webhook(request: web.Request):
                 print(f"Error enviando correos: {e}")
 
     return web.Response(status=200, text="OK")
-
+async def test_correo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        enviar_correo(
+            TU_CORREO,
+            "Test correo bot",
+            "<h2>Funciona!</h2><p>El correo llega correctamente.</p>"
+        )
+        await update.message.reply_text("Correo enviado correctamente.")
+    except Exception as e:
+        await update.message.reply_text(f"Error al enviar correo: {e}")
 # ─── ARRANQUE ────────────────────────────────────────────────
 def main():
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
-
+    application.add_handler(CommandHandler("testcorreo", test_correo))
     stripe_app = web.Application()
     stripe_app["bot_app"] = application
     stripe_app.router.add_post("/stripe-webhook", stripe_webhook)
