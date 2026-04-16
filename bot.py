@@ -1,6 +1,7 @@
 import os
 import hmac
 import hashlib
+import asyncio
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -50,16 +51,16 @@ def enviar_correo(destinatario: str, asunto: str, cuerpo_html: str):
 
 def correo_cliente(nombre: str, email: str, asesoria: str, pago: str) -> str:
     return f"""
-    <h2>¡Hola {nombre}! 👋</h2>
-    <p>Tu pago de la asesoría <strong>{asesoria} ({pago})</strong> ha sido confirmado.</p>
-    <h3>Próximos pasos:</h3>
-    <p>👉 <a href="{CALENDLY_LINK}">Reserva tu sesión aquí</a></p>
+    <h2>Hola {nombre}!</h2>
+    <p>Tu pago de la asesoria <strong>{asesoria} ({pago})</strong> ha sido confirmado.</p>
+    <h3>Proximos pasos:</h3>
+    <p>Reserva tu sesion aqui: <a href="{CALENDLY_LINK}">{CALENDLY_LINK}</a></p>
     <hr>
     <h3>Recursos para empezar:</h3>
     <ul>
       <li><a href="{WEB_LINK_1}">Recurso</a></li>
     </ul>
-    <p>Cualquier duda, responde este correo. ¡Nos vemos pronto!</p>
+    <p>Cualquier duda, responde este correo. Nos vemos pronto!</p>
     """
 
 def correo_negocio(nombre: str, email: str, asesoria: str, pago: str) -> str:
@@ -68,7 +69,7 @@ def correo_negocio(nombre: str, email: str, asesoria: str, pago: str) -> str:
     <table>
       <tr><td><strong>Nombre:</strong></td><td>{nombre}</td></tr>
       <tr><td><strong>Email:</strong></td><td>{email}</td></tr>
-      <tr><td><strong>Asesoría:</strong></td><td>{asesoria}</td></tr>
+      <tr><td><strong>Asesoria:</strong></td><td>{asesoria}</td></tr>
       <tr><td><strong>Plan:</strong></td><td>{pago}</td></tr>
     </table>
     """
@@ -76,7 +77,7 @@ def correo_negocio(nombre: str, email: str, asesoria: str, pago: str) -> str:
 # ─── HANDLERS DEL BOT ────────────────────────────────────────
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "¿Qué tipo de asesoría quieres?",
+        "Que tipo de asesoria quieres?",
         reply_markup=markup_asesoria
     )
 
@@ -89,49 +90,44 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     estado = usuarios[user_id]
 
-    # PASO 1: elegir asesoría
     if texto in links:
         estado["asesoria"] = texto
         opciones_disponibles = list(links[texto].keys())
         menu_dinamico = [opciones_disponibles]
         markup_dinamico = ReplyKeyboardMarkup(menu_dinamico, one_time_keyboard=True)
-        await update.message.reply_text("¿Cómo quieres pagar?", reply_markup=markup_dinamico)
+        await update.message.reply_text("Como quieres pagar?", reply_markup=markup_dinamico)
 
-    # PASO 2: elegir tipo de pago
     elif texto in ["Mensual", "Anual"] and "asesoria" in estado:
         asesoria = estado["asesoria"]
         if texto not in links[asesoria]:
-            await update.message.reply_text("Esa opción no está disponible. Elige otra del menú.")
+            await update.message.reply_text("Esa opcion no esta disponible. Elige otra del menu.")
             return
         estado["pago"] = texto
         link_base = links[asesoria][texto]
         link = f"{link_base}?client_reference_id={user_id}"
         await update.message.reply_text(
-            f"Perfecto 👌\n\nRealiza el pago aquí:\n{link}\n\n"
-            "Cuando termines el pago el bot continuará automáticamente."
+            f"Perfecto!\n\nRealiza el pago aqui:\n{link}\n\n"
+            "Cuando termines el pago el bot continuara automaticamente."
         )
 
-    # PASO 3: fallback manual por si acaso
-    elif texto.lower() in ["/pagado", "pagado", "ya pagué", "ya pague"]:
+    elif texto.lower() in ["/pagado", "pagado", "ya pague"]:
         await update.message.reply_text(
-            "Verificando tu pago... ✅\n\nPor favor escribe tu nombre completo:"
+            "Verificando tu pago...\n\nPor favor escribe tu nombre completo:"
         )
         estado["esperando"] = "nombre"
 
-    # PASO 4: recoger nombre
     elif estado.get("esperando") == "nombre":
         estado["nombre"] = texto
-        await update.message.reply_text("Ahora escribe tu correo electrónico:")
+        await update.message.reply_text("Ahora escribe tu correo electronico:")
         estado["esperando"] = "email"
 
-    # PASO 5: recoger email y completar flujo
     elif estado.get("esperando") == "email":
         estado["email"] = texto
         estado["esperando"] = None
         await completar_flujo(update, user_id)
 
     else:
-        await update.message.reply_text("Selecciona una opción del menú o escribe /start.")
+        await update.message.reply_text("Selecciona una opcion del menu o escribe /start.")
 
 async def completar_flujo(update: Update, user_id: int):
     d = usuarios[user_id]
@@ -141,20 +137,20 @@ async def completar_flujo(update: Update, user_id: int):
     pago     = d.get("pago", "")
 
     await update.message.reply_text(
-        f"¡Todo listo, {nombre}! 🎉\n\n"
-        f"👉 Elige tu fecha de sesión aquí:\n{CALENDLY_LINK}\n\n"
+        f"Todo listo, {nombre}!\n\n"
+        f"Elige tu fecha de sesion aqui:\n{CALENDLY_LINK}\n\n"
         "También te hemos enviado un correo con todos los detalles."
     )
 
     if email:
         try:
-            enviar_correo(email, f"Confirmación de tu asesoría {asesoria}",
+            enviar_correo(email, f"Confirmacion de tu asesoria {asesoria}",
                 correo_cliente(nombre, email, asesoria, pago))
         except Exception as e:
             print(f"Error correo cliente: {e}")
 
     try:
-        enviar_correo(TU_CORREO, f"Nuevo cliente: {nombre} – {asesoria} {pago}",
+        enviar_correo(TU_CORREO, f"Nuevo cliente: {nombre} - {asesoria} {pago}",
             correo_negocio(nombre, email, asesoria, pago))
     except Exception as e:
         print(f"Error correo negocio: {e}")
@@ -200,14 +196,14 @@ async def stripe_webhook(request: web.Request):
             await app_bot.bot.send_message(
                 chat_id=chat_id,
                 text=(
-                    f"✅ ¡Pago confirmado, {nombre}!\n\n"
-                    f"👉 Reserva tu sesión aquí:\n{CALENDLY_LINK}\n\n"
+                    f"Pago confirmado, {nombre}!\n\n"
+                    f"Reserva tu sesion aqui:\n{CALENDLY_LINK}\n\n"
                     "También te enviamos un correo con todos los detalles."
                 )
             )
 
             try:
-                enviar_correo(email, f"Confirmación {asesoria}",
+                enviar_correo(email, f"Confirmacion {asesoria}",
                     correo_cliente(nombre, email, asesoria, pago))
                 enviar_correo(TU_CORREO, f"Nuevo cliente: {nombre}",
                     correo_negocio(nombre, email, asesoria, pago))
@@ -226,8 +222,7 @@ def main():
     stripe_app["bot_app"] = application
     stripe_app.router.add_post("/stripe-webhook", stripe_webhook)
 
-    import asyncio
-async def run_all():
+    async def run_all():
         runner = web.AppRunner(stripe_app)
         await runner.setup()
         port = int(os.environ.get("PORT", 8080))
