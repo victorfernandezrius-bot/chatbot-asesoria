@@ -51,16 +51,26 @@ def enviar_correo(destinatario: str, asunto: str, cuerpo_html: str):
 
 def correo_cliente(nombre: str, email: str, asesoria: str, pago: str) -> str:
     return f"""
-    <h2>Hola {nombre}!</h2>
-    <p>Tu pago de la asesoria <strong>{asesoria} ({pago})</strong> ha sido confirmado.</p>
-    <h3>Proximos pasos:</h3>
-    <p>Reserva tu sesion aqui: <a href="{CALENDLY_LINK}">{CALENDLY_LINK}</a></p>
+    <h2>¡Hola {nombre}! 👋</h2>
+    <p>Tu pago de la asesoría <strong>{asesoria} ({pago})</strong> ha sido confirmado.</p>
+    <h3>Siguiente paso:</h3>
+    <p>👉 <a href="{CALENDLY_LINK}">Reserva tu sesión aquí</a></p>
     <hr>
-    <h3>Recursos para empezar:</h3>
+    <h3>Realiza el test antes de la videollamada:</h3>
     <ul>
-      <li><a href="{WEB_LINK_1}">Recurso</a></li>
+      <li><a href="{WEB_LINK_1}">Test</a></li>
     </ul>
-    <p>Cualquier duda, responde este correo. Nos vemos pronto!</p>
+    <p>Cualquier duda, responde este correo. ¡Nos vemos pronto!</p>
+    <br>
+    <hr>
+    <p><a href="https://www.contabilidadpersonal.com">www.contabilidadpersonal.com</a><br>
+    <a href="mailto:victor@contabilidadpersonal.com">victor@contabilidadpersonal.com</a></p>
+    <p>Síguenos en nuestras redes sociales</p>
+    <p>
+      <a href="https://www.instagram.com/contabilidadpersonales">Instagram</a> &nbsp;|&nbsp;
+      <a href="https://www.youtube.com/@ContabilidadpersonalES">Youtube</a> &nbsp;|&nbsp;
+      <a href="https://x.com/vfeernandez09">X</a>
+    </p>
     """
 
 def correo_negocio(nombre: str, email: str, asesoria: str, pago: str) -> str:
