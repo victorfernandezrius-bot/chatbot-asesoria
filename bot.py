@@ -12,7 +12,7 @@ from telegram.ext import (ApplicationBuilder, CommandHandler,
 # ─── CONFIGURACIÓN ───────────────────────────────────────────
 TOKEN                 = os.environ.get("TOKEN")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
-SMTP_HOST             = "smpt.serviciodecorreo.es"
+SMTP_HOST             = "smtp.serviciodecorreo.es"
 SMTP_PORT             = 465
 SMTP_USER             = os.environ.get("SMTP_USER")
 SMTP_PASS             = os.environ.get("SMTP_PASS")
@@ -44,8 +44,7 @@ def enviar_correo(destinatario: str, asunto: str, cuerpo_html: str):
     msg["From"]    = SMTP_USER
     msg["To"]      = destinatario
     msg.attach(MIMEText(cuerpo_html, "html"))
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-        server.starttls()
+    with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
         server.login(SMTP_USER, SMTP_PASS)
         server.sendmail(SMTP_USER, destinatario, msg.as_string())
 
