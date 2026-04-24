@@ -230,6 +230,7 @@ def main():
     stripe_app = web.Application()
     stripe_app["bot_app"] = application
     stripe_app.router.add_post("/stripe-webhook", stripe_webhook)
+    stripe_app.router.add_get("/ping", lambda r: web.Response(text="OK"))
 
     async def run_all():
         runner = web.AppRunner(stripe_app)
